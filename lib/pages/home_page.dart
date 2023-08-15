@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 
@@ -14,6 +15,11 @@ class _HomePageState extends State<HomePage> {
 
   late double _deviceHeight;
   late double _deviceWidth;
+
+  String? _newTaskContent;
+
+  final String hiveboxTasks = "tasks";
+  Box? _box;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +43,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _taskListView() {
+  Widget _taskListView(){
+    return FutureBuilder(
+      future: Hive.openBox(hiveboxTasks),
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          _box = snapshot.data;
+          return _taskList();
+        }
+        else {
+          return CircularProgressIndicator();  
+        }
+      },
+    );
+  }
+
+  Widget _taskList() {
     return ListView(
       children: [
         ListTile(
@@ -73,9 +94,28 @@ class _HomePageState extends State<HomePage> {
   Widget _addTaskButton(){
     return FloatingActionButton(
       onPressed:() => {
-        print("Add Task button pressed."),
+        _displayTaskCreateWindow(),
       },
       child: const Icon(Icons.add),
+    );
+  }
+
+  void _displayTaskCreateWindow (){
+    showDialog(
+      context: context, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Add a new task!"),
+          content: TextField(
+            onSubmitted: (value) => {},
+            onChanged: (value) => {
+              setState(() {
+                _newTaskContent = value;
+              }),
+            },
+          ),
+        );
+      },
     );
   }
 
