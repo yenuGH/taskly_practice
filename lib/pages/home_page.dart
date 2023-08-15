@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:taskly/models/task.dart';
+import 'package:taskly/widgets/task_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,14 +14,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final String _hiveboxTasks = "tasks";
+  Box? _box;
 
   late double _deviceHeight;
   late double _deviceWidth;
 
   String? _newTaskContent;
 
-  final String hiveboxTasks = "tasks";
-  Box? _box;
 
   @override
   Widget build(BuildContext context) {
@@ -37,57 +39,9 @@ class _HomePageState extends State<HomePage> {
         toolbarHeight: _deviceHeight * 0.15,
       ),
 
-      body: _taskListView(),
+      body: TaskList(),
 
       floatingActionButton: _addTaskButton(),
-    );
-  }
-
-  Widget _taskListView(){
-    return FutureBuilder(
-      future: Hive.openBox(hiveboxTasks),
-      builder: (BuildContext context, AsyncSnapshot snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          _box = snapshot.data;
-          return _taskList();
-        }
-        else {
-          return CircularProgressIndicator();  
-        }
-      },
-    );
-  }
-
-  Widget _taskList() {
-    return ListView(
-      children: [
-        ListTile(
-          title: const Text(
-            "Task 1",
-            style: TextStyle(
-                decoration: TextDecoration.lineThrough,
-            ),
-          ),
-          subtitle: Text(_getFormattedDateTime()),
-          trailing: const Icon(
-            Icons.check_box_outline_blank,
-            color: Colors.blue,
-          ),
-        ),
-        ListTile(
-          title: const Text(
-            "Task 2",
-            style: TextStyle(
-                decoration: TextDecoration.lineThrough,
-            ),
-          ),
-          subtitle: Text(_getFormattedDateTime()),
-          trailing: const Icon(
-            Icons.check_box_outline_blank,
-            color: Colors.blue,
-          ),
-        ),
-      ],
     );
   }
 
@@ -119,9 +73,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String _getFormattedDateTime(){
-    DateTime dateTime = DateTime.now();
-    String formattedDateTime = DateFormat.yMMMMEEEEd().format(dateTime);  
-    return "Date Created: $formattedDateTime";
-  }
 }
