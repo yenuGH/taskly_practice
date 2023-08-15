@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:taskly/pages/home_page.dart';
-import 'package:hive_flutter/hive_flutter.dart'
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async{
   await Hive.initFlutter("hive_boxes");
+  print("Hive Database initialized.");
   runApp(const Taskly());
 }
 
