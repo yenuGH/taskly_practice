@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:intl/intl.dart';
 import 'package:taskly/models/task.dart';
-import 'package:taskly/widgets/task_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -39,7 +36,7 @@ class _HomePageState extends State<HomePage> {
         toolbarHeight: _deviceHeight * 0.15,
       ),
 
-      body: TaskList(),
+      body: _taskListView(),
 
       floatingActionButton: _addTaskButton(),
     );
@@ -61,7 +58,23 @@ class _HomePageState extends State<HomePage> {
         return AlertDialog(
           title: const Text("Add a new task!"),
           content: TextField(
-            onSubmitted: (value) => {},
+            onSubmitted: (value) {
+              if (_newTaskContent != null){
+                Task task = Task(
+                  content: value,
+                  timestamp: DateTime.now(),
+                  completed: false,
+                );
+
+                _box!.add(task.toMap());
+
+                setState(() {
+                  _newTaskContent = null;
+                  Navigator.pop(context);
+                });
+
+              }
+            },
             onChanged: (value) => {
               setState(() {
                 _newTaskContent = value;
@@ -71,6 +84,55 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Widget _taskListView(){
+    return FutureBuilder(
+      future: Hive.openBox(_hiveboxTasks),
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          _box = snapshot.data;
+          return _taskList();
+        }
+        else {
+          return const CircularProgressIndicator();  
+        }
+      },
+    );
+  }
+
+  Widget _taskList() {
+    List tasks = _box!.values.toList();
+
+    return ListView.builder(
+      itemCount: tasks.length,
+      itemBuilder: (BuildContext context, int index) {
+        Task task = Task.fromMap(tasks[index]);
+
+        return ListTile(
+          title: Text(
+            task.content,
+            style: TextStyle(
+                decoration: task.completed ? TextDecoration.lineThrough : null,
+            ),
+          ),
+
+          subtitle: Text(
+            _getFormattedDateTime(task.timestamp),
+          ),
+
+          trailing: Icon(
+            task.completed ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+            color: Colors.blue,
+          ),
+        );
+      },
+    );
+  }
+
+  String _getFormattedDateTime(DateTime dateTime){
+    String formattedDateTime = DateFormat.yMMMMEEEEd().format(dateTime);  
+    return "Date Created: $formattedDateTime";
   }
 
 }
